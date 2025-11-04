@@ -1,0 +1,15 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.veevotech.query_q",
+      "sha256_cert_fingerprints": [
+        "4C27C0D3D126B565EED6E22C5584023445CC6375D84BE31D298F5F064BF6A469",
+        "A44962D563C58A406D0B2219653AB349EBBCE078BD18E29FA0E389D2199367C1"
+      ]
+    }
+  }
+]
