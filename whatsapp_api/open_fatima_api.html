@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Opening QueryQ...</title>
+    <meta http-equiv="refresh" content="0; url=queryq://open">
+    <script>
+        // Immediate redirect to app
+        window.location.href = 'queryq://open';
+        
+        // Fallback: If app not installed, redirect to Play Store after 2 seconds
+        setTimeout(function() {
+            window.location.href = 'https://play.google.com/store/apps/details?id=com.veevotech.query_q';
+        }, 2000);
+    </script>
+</head>
+<body>
+    <p>Opening QueryQ app...</p>
+    <p>If the app doesn't open, <a href="queryq://open">click here</a> or <a href="https://play.google.com/store/apps/details?id=com.veevotech.query_q">install from Play Store</a>.</p>
+</body>
+</html>
