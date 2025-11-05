@@ -4,19 +4,87 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Opening QueryQ...</title>
-    <meta http-equiv="refresh" content="0; url=queryq://open">
     <script>
-        // Immediate redirect to app
-        window.location.href = 'queryq://open';
-        
-        // Fallback: If app not installed, redirect to Play Store after 2 seconds
-        setTimeout(function() {
-            window.location.href = 'https://play.google.com/store/apps/details?id=com.veevotech.query_q';
-        }, 2000);
+        (function() {
+            // Try to open the app immediately
+            var appUrl = 'queryq://open';
+            var playStoreUrl = 'https://play.google.com/store/apps/details?id=com.veevotech.query_q';
+            
+            // On Android, use intent:// URL which can specify fallback
+            var userAgent = navigator.userAgent || navigator.vendor || window.opera;
+            var isAndroid = /android/i.test(userAgent);
+            
+            if (isAndroid) {
+                // Use Android Intent URL with Play Store fallback
+                var intentUrl = 'intent://open#Intent;scheme=queryq;package=com.veevotech.query_q;S.browser_fallback_url=' + 
+                    encodeURIComponent(playStoreUrl) + ';end';
+                
+                // Try intent URL first
+                window.location.href = intentUrl;
+                
+                // Fallback: If intent fails, redirect to Play Store after short delay
+                setTimeout(function() {
+                    // If we're still on this page, redirect to Play Store
+                    window.location.href = playStoreUrl;
+                }, 1500);
+            } else {
+                // For non-Android devices, try custom scheme with Play Store fallback
+                var startTime = Date.now();
+                window.location.href = appUrl;
+                
+                // If page is still visible after 1.5 seconds, redirect to Play Store
+                setTimeout(function() {
+                    var elapsed = Date.now() - startTime;
+                    // Check if we're still on this page (app didn't open)
+                    if (document.visibilityState === 'visible' || elapsed > 1500) {
+                        window.location.href = playStoreUrl;
+                    }
+                }, 1500);
+            }
+        })();
     </script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: #f5f5f5;
+        }
+        .container {
+            text-align: center;
+            padding: 20px;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
-    <p>Opening QueryQ app...</p>
-    <p>If the app doesn't open, <a href="queryq://open">click here</a> or <a href="https://play.google.com/store/apps/details?id=com.veevotech.query_q">install from Play Store</a>.</p>
+    <div class="container">
+        <div class="spinner"></div>
+        <p>Opening QueryQ app...</p>
+        <p style="font-size: 14px; color: #666;">
+            If the app doesn't open, you'll be redirected to Play Store.
+        </p>
+        <p style="margin-top: 20px;">
+            <a href="https://play.google.com/store/apps/details?id=com.veevotech.query_q" 
+               style="color: #3498db; text-decoration: none;">
+                Open Play Store directly
+            </a>
+        </p>
+    </div>
 </body>
 </html>
