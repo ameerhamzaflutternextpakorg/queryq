@@ -6,45 +6,34 @@
     <title>Opening QueryQ...</title>
     <script>
         (function() {
-            var appUrl = 'queryq://open';
-            var playStoreAppUrl = 'market://details?id=com.veevotech.query_q';
+            var appIntentUrl = 'intent://open#Intent;scheme=queryq;package=com.veevotech.query_q;end';
+            var playStoreIntentUrl = 'intent://details?id=com.veevotech.query_q#Intent;scheme=market;package=com.android.vending;end';
             var playStoreWebUrl = 'https://play.google.com/store/apps/details?id=com.veevotech.query_q';
             
             var userAgent = navigator.userAgent || navigator.vendor || window.opera;
             var isAndroid = /android/i.test(userAgent);
             
             if (isAndroid) {
-                // Method 1: Try to open app immediately
-                window.location.href = appUrl;
+                // Try app first
+                window.location.href = appIntentUrl;
                 
-                // Method 2: Simultaneously try Play Store app using iframe (more aggressive)
-                var iframe = document.createElement('iframe');
-                iframe.style.display = 'none';
-                iframe.src = playStoreAppUrl;
-                document.body.appendChild(iframe);
-                
-                // Method 3: After short delay, force redirect to market://
-                setTimeout(function() {
-                    try {
-                        window.location.replace(playStoreAppUrl);
-                    } catch (e) {
-                        // If market:// fails, use Intent URL
-                        var intentUrl = 'intent://details?id=com.veevotech.query_q#Intent;scheme=market;package=com.android.vending;end';
-                        window.location.href = intentUrl;
-                    }
-                }, 500);
-                
-                // Final fallback: Use Intent URL with explicit Play Store package
+                // If app not installed, Android will automatically use fallback
+                // But we add explicit fallback after delay
                 setTimeout(function() {
                     if (document.visibilityState === 'visible') {
-                        var intentUrl = 'intent://details?id=com.veevotech.query_q#Intent;scheme=market;package=com.android.vending;S.browser_fallback_url=' + 
-                            encodeURIComponent(playStoreWebUrl) + ';end';
-                        window.location.href = intentUrl;
+                        // Try Play Store Intent URL
+                        window.location.href = playStoreIntentUrl;
+                        
+                        // Final fallback to web if intent fails
+                        setTimeout(function() {
+                            if (document.visibilityState === 'visible') {
+                                window.location.href = playStoreWebUrl;
+                            }
+                        }, 1000);
                     }
-                }, 1500);
+                }, 800);
             } else {
-                // For non-Android
-                window.location.href = appUrl;
+                window.location.href = 'queryq://open';
                 setTimeout(function() {
                     if (document.visibilityState === 'visible') {
                         window.location.href = playStoreWebUrl;
@@ -87,20 +76,5 @@
         <div class="spinner"></div>
         <p>Opening QueryQ...</p>
     </div>
-    <!-- Hidden iframe for market:// trigger -->
-    <iframe id="marketFrame" style="display:none;"></iframe>
-    <script>
-        // Additional attempt: Direct Play Store link as meta redirect
-        var isAndroid = /android/i.test(navigator.userAgent);
-        if (isAndroid) {
-            // Try meta refresh to market://
-            setTimeout(function() {
-                var meta = document.createElement('meta');
-                meta.httpEquiv = 'refresh';
-                meta.content = '0; url=market://details?id=com.veevotech.query_q';
-                document.getElementsByTagName('head')[0].appendChild(meta);
-            }, 300);
-        }
-    </script>
 </body>
 </html>
