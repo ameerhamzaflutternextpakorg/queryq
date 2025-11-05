@@ -7,51 +7,43 @@
     <script>
         (function() {
             var appUrl = 'queryq://open';
-            var playStoreAppUrl = 'market://details?id=com.veevotech.query_q'; // Opens Play Store app directly
-            var playStoreWebUrl = 'https://play.google.com/store/apps/details?id=com.veevotech.query_q'; // Fallback web URL
+            var playStoreAppUrl = 'market://details?id=com.veevotech.query_q';
+            var playStoreWebUrl = 'https://play.google.com/store/apps/details?id=com.veevotech.query_q';
             
             var userAgent = navigator.userAgent || navigator.vendor || window.opera;
             var isAndroid = /android/i.test(userAgent);
             
             if (isAndroid) {
-                // Try to open the app first
-                var startTime = Date.now();
-                var hidden = false;
-                
-                // Listen for page visibility changes (app might open and hide browser)
-                document.addEventListener('visibilitychange', function() {
-                    if (document.hidden) {
-                        hidden = true;
-                    }
-                });
-                
-                // Try opening the app
+                // Method 1: Try to open app immediately
                 window.location.href = appUrl;
                 
-                // Check if app opened (page became hidden or time passed)
+                // Method 2: Simultaneously try Play Store app using iframe (more aggressive)
+                var iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = playStoreAppUrl;
+                document.body.appendChild(iframe);
+                
+                // Method 3: After short delay, force redirect to market://
                 setTimeout(function() {
-                    var elapsed = Date.now() - startTime;
-                    
-                    // If page is still visible after 1 second, app likely didn't open
-                    if (!hidden && document.visibilityState === 'visible' && elapsed >= 1000) {
-                        // Try to open Play Store app directly using market://
-                        try {
-                            window.location.href = playStoreAppUrl;
-                            
-                            // If market:// fails, fallback to web Play Store after 1.5 seconds
-                            setTimeout(function() {
-                                if (document.visibilityState === 'visible') {
-                                    window.location.href = playStoreWebUrl;
-                                }
-                            }, 1500);
-                        } catch (e) {
-                            // If market:// is not supported, use web URL
-                            window.location.href = playStoreWebUrl;
-                        }
+                    try {
+                        window.location.replace(playStoreAppUrl);
+                    } catch (e) {
+                        // If market:// fails, use Intent URL
+                        var intentUrl = 'intent://details?id=com.veevotech.query_q#Intent;scheme=market;package=com.android.vending;end';
+                        window.location.href = intentUrl;
                     }
-                }, 1000);
+                }, 500);
+                
+                // Final fallback: Use Intent URL with explicit Play Store package
+                setTimeout(function() {
+                    if (document.visibilityState === 'visible') {
+                        var intentUrl = 'intent://details?id=com.veevotech.query_q#Intent;scheme=market;package=com.android.vending;S.browser_fallback_url=' + 
+                            encodeURIComponent(playStoreWebUrl) + ';end';
+                        window.location.href = intentUrl;
+                    }
+                }, 1500);
             } else {
-                // For non-Android, try app URL then Play Store web
+                // For non-Android
                 window.location.href = appUrl;
                 setTimeout(function() {
                     if (document.visibilityState === 'visible') {
@@ -93,10 +85,22 @@
 <body>
     <div class="container">
         <div class="spinner"></div>
-        <p>Opening QueryQ app...</p>
-        <p style="font-size: 14px; color: #666;">
-            If the app doesn't open, you'll be redirected to Play Store.
-        </p>
+        <p>Opening QueryQ...</p>
     </div>
+    <!-- Hidden iframe for market:// trigger -->
+    <iframe id="marketFrame" style="display:none;"></iframe>
+    <script>
+        // Additional attempt: Direct Play Store link as meta redirect
+        var isAndroid = /android/i.test(navigator.userAgent);
+        if (isAndroid) {
+            // Try meta refresh to market://
+            setTimeout(function() {
+                var meta = document.createElement('meta');
+                meta.httpEquiv = 'refresh';
+                meta.content = '0; url=market://details?id=com.veevotech.query_q';
+                document.getElementsByTagName('head')[0].appendChild(meta);
+            }, 300);
+        }
+    </script>
 </body>
 </html>
