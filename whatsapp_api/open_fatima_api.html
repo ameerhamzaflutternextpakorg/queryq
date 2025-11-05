@@ -6,38 +6,56 @@
     <title>Opening QueryQ...</title>
     <script>
         (function() {
-            // Try to open the app immediately
             var appUrl = 'queryq://open';
-            var playStoreUrl = 'https://play.google.com/store/apps/details?id=com.veevotech.query_q';
+            var playStoreAppUrl = 'market://details?id=com.veevotech.query_q'; // Opens Play Store app directly
+            var playStoreWebUrl = 'https://play.google.com/store/apps/details?id=com.veevotech.query_q'; // Fallback web URL
             
-            // On Android, use intent:// URL which can specify fallback
             var userAgent = navigator.userAgent || navigator.vendor || window.opera;
             var isAndroid = /android/i.test(userAgent);
             
             if (isAndroid) {
-                // Use Android Intent URL with Play Store fallback
-                var intentUrl = 'intent://open#Intent;scheme=queryq;package=com.veevotech.query_q;S.browser_fallback_url=' + 
-                    encodeURIComponent(playStoreUrl) + ';end';
-                
-                // Try intent URL first
-                window.location.href = intentUrl;
-                
-                // Fallback: If intent fails, redirect to Play Store after short delay
-                setTimeout(function() {
-                    // If we're still on this page, redirect to Play Store
-                    window.location.href = playStoreUrl;
-                }, 1500);
-            } else {
-                // For non-Android devices, try custom scheme with Play Store fallback
+                // Try to open the app first
                 var startTime = Date.now();
+                var hidden = false;
+                
+                // Listen for page visibility changes (app might open and hide browser)
+                document.addEventListener('visibilitychange', function() {
+                    if (document.hidden) {
+                        hidden = true;
+                    }
+                });
+                
+                // Try opening the app
                 window.location.href = appUrl;
                 
-                // If page is still visible after 1.5 seconds, redirect to Play Store
+                // Check if app opened (page became hidden or time passed)
                 setTimeout(function() {
                     var elapsed = Date.now() - startTime;
-                    // Check if we're still on this page (app didn't open)
-                    if (document.visibilityState === 'visible' || elapsed > 1500) {
-                        window.location.href = playStoreUrl;
+                    
+                    // If page is still visible after 1 second, app likely didn't open
+                    if (!hidden && document.visibilityState === 'visible' && elapsed >= 1000) {
+                        // Try to open Play Store app directly using market://
+                        try {
+                            window.location.href = playStoreAppUrl;
+                            
+                            // If market:// fails, fallback to web Play Store after 1.5 seconds
+                            setTimeout(function() {
+                                if (document.visibilityState === 'visible') {
+                                    window.location.href = playStoreWebUrl;
+                                }
+                            }, 1500);
+                        } catch (e) {
+                            // If market:// is not supported, use web URL
+                            window.location.href = playStoreWebUrl;
+                        }
+                    }
+                }, 1000);
+            } else {
+                // For non-Android, try app URL then Play Store web
+                window.location.href = appUrl;
+                setTimeout(function() {
+                    if (document.visibilityState === 'visible') {
+                        window.location.href = playStoreWebUrl;
                     }
                 }, 1500);
             }
@@ -78,12 +96,6 @@
         <p>Opening QueryQ app...</p>
         <p style="font-size: 14px; color: #666;">
             If the app doesn't open, you'll be redirected to Play Store.
-        </p>
-        <p style="margin-top: 20px;">
-            <a href="https://play.google.com/store/apps/details?id=com.veevotech.query_q" 
-               style="color: #3498db; text-decoration: none;">
-                Open Play Store directly
-            </a>
         </p>
     </div>
 </body>
